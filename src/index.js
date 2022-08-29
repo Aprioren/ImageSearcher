@@ -1,4 +1,4 @@
-import simpleLightbox from "Simplelightbox";
+import {simpleLightbox} from "Simplelightbox";
 import "simplelightbox/dist/simple-lightbox.min.css";
 import { picturueQuery } from "./js/fetchAPI/fetchQuery";
 import Notiflix from "notiflix";
