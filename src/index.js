@@ -1,4 +1,4 @@
-import simpleLightbox from "simplelightbox";
+import simpleLightbox from "Simplelightbox";
 import "simplelightbox/dist/simple-lightbox.min.css";
 import { picturueQuery } from "./js/fetchAPI/fetchQuery";
 import Notiflix from "notiflix";
@@ -48,7 +48,7 @@ function onSearchFormSubmit(event){
 
         renderGallery(data.hits);
         onSucsessAlert(data);
-        simpleLightbox = new simpleLightbox('.gallery a', sipleLightboxOptions).refresh();
+        simpleLightbox = new SimpleLightbox('.gallery a', sipleLightboxOptions).refresh();
         observer.observe(refs.guard);
     })
     .catch(error=> console.log(error))
@@ -73,7 +73,7 @@ function updateQuery(entries){
             picturueQuery(userQuery,page+=1).then(({data})=>{
                 const endOfSearch = Math.ceil(data.totalHits / data.per_page);
                 renderGallery(data.hits);
-                simpleLightbox = new simpleLightbox('.gallery a', sipleLightboxOptions).refresh();
+                simpleLightbox = new SimpleLightbox('.gallery a', sipleLightboxOptions).refresh();
                 if(page > endOfSearch){
                     onEndOfGalerey();
                 }
