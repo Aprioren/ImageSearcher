@@ -45,6 +45,7 @@ function onSearchFormSubmit(event){
             onFailureAlert();
             return;
         };
+
         renderGallery(data.hits);
         onSucsessAlert(data);
         simpleLightbox = new SimpleLightbox('.gallery a', sipleLightboxOptions).refresh();
@@ -72,7 +73,7 @@ function updateQuery(entries){
             picturueQuery(userQuery,page+=1).then(({data})=>{
                 const endOfSearch = Math.ceil(data.totalHits / data.per_page);
                 renderGallery(data.hits);
-                
+                simpleLightbox = new SimpleLightbox('.gallery a', sipleLightboxOptions).refresh();
                 if(page > endOfSearch){
                     onEndOfGalerey();
                 }
@@ -80,8 +81,9 @@ function updateQuery(entries){
                 const { height: cardHeight } = document.querySelector(".gallery")
                 .firstElementChild.getBoundingClientRect();
 
-                window.scrollBy({top: cardHeight * 2,behavior: "smooth",});
-            });
+                window.scrollBy({top: cardHeight * 3, behavior: "smooth",});
+            })
+            .catch(error=> console.log(error));
         };
     });
 };
