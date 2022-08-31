@@ -1,9 +1,9 @@
 import simpleLightbox from "simplelightbox";
 import "simplelightbox/dist/simple-lightbox.min.css";
-import { picturueQuery } from "./js/fetchAPI/fetchQuery";
+import { picturueQuery } from "./js/API";
 import Notiflix from "notiflix";
-import {renderGallery} from './js/renderMarkup';
 import simpleLightbox from "simplelightbox";
+import renderMarkup from './js/renderMarkup.hbs';
 
 const refs ={
     form: document.querySelector('#search-form'),
@@ -12,18 +12,20 @@ const refs ={
     container: document.querySelector('.gallery'),
 };
 let page = 1;
+let perPage  = 40;
 let userQuery = '';
 const options = {
     root: null,
     rootMargin: '500px',
     threshold: 1,
-}
+};
 const sipleLightboxOptions = {
     captionsData:'alt',
     captionDelay : 250,
     enableKeyboard: true,
-}
-const observer = new IntersectionObserver(updateQuery,options);
+};
+let lightbox = new simpleLightbox('.gallery a', sipleLightboxOptions);
+let observer = new IntersectionObserver(updateQuery,options);
 
 
 refs.form.addEventListener('submit', onSearchFormSubmit);
@@ -31,15 +33,16 @@ refs.form.addEventListener('submit', onSearchFormSubmit);
 function onSearchFormSubmit(event){
     event.preventDefault();
     userQuery = event.currentTarget.searchQuery.value.trim();
-    refs.container.innerHTML = '';
-    page = 1;
 
     if(userQuery === ''){
         onFailureAlert();
         return;
     };
 
-    picturueQuery(userQuery, page)
+    refs.container.innerHTML = '';
+    page = 1;
+  
+    picturueQuery(userQuery, page, perPage)
     .then(({data}) =>{
 
         if(data.totalHits === 0){
@@ -47,12 +50,11 @@ function onSearchFormSubmit(event){
             return;
         };
 
-        renderGallery(data.hits);
+        renderCard(data.hits);
+        lightbox.refresh();
         onSucsessAlert(data);
-        let lightbox = new simpleLightbox('.gallery a', sipleLightboxOptions).refresh();
         observer.observe(refs.guard);
     })
-    .catch(error=> console.log(error))
     .finally(event.target.reset());
 };
 
@@ -69,22 +71,32 @@ function onEndOfGalerey(){
 };
 
 function updateQuery(entries){
-    entries.forEach(entry=>{
+    entries.forEach(entry=>{    
         if(entry.isIntersecting){
-            picturueQuery(userQuery,page+=1).then(({data})=>{
-                const endOfSearch = Math.ceil(data.totalHits / data.per_page);
-                renderGallery(data.hits);
-                let lightbox = new simpleLightbox('.gallery a', sipleLightboxOptions).refresh();
+            picturueQuery(userQuery,page+=1,perPage).then(({data})=>{
+                
+                const endOfSearch = Math.ceil(data.totalHits / perPage);
                 if(page > endOfSearch){
                     onEndOfGalerey();
-                }
+                    observer.unobserve(entry.target);
+                    return;
+                };
 
+                renderCard(data.hits);
+                
                 const { height: cardHeight } = document.querySelector(".gallery")
                 .firstElementChild.getBoundingClientRect();
 
-                window.scrollBy({top: cardHeight * 3, behavior: "smooth",});
-            })
-            .catch(error=> console.log(error));
+                window.scrollBy({
+                top: cardHeight * 3,
+                behavior: "smooth",
+                });
+                lightbox.refresh();
+            });
         };
     });
+};
+function renderCard(array) {
+    const markup = array.map(item => renderMarkup(item)).join('');
+    refs.container.insertAdjacentHTML('beforeend', markup);
 };
