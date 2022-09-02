@@ -1,5 +1,6 @@
 import axios from "axios";
 import Notiflix from "notiflix";
+import {onEndOfGalerey} from './alerts.js';
 export {picturueQuery};
 const BASE_URL = axios.defaults.baseURL = 'https://pixabay.com/api/';
 
@@ -18,6 +19,9 @@ async function picturueQuery(query,page,perPage) {
     });
     return response;
   } catch (error) {
-    Notiflix.error(error.message);
+    if(error.response.status === 400){
+      onEndOfGalerey();
+      return;
+    };
   };
 };

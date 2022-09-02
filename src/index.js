@@ -1,9 +1,9 @@
 import simpleLightbox from "simplelightbox";
 import "simplelightbox/dist/simple-lightbox.min.css";
-import { picturueQuery } from "./js/API";
-import Notiflix from "notiflix";
+import { picturueQuery } from "./js/pictureQuery";
 import simpleLightbox from "simplelightbox";
-import renderMarkup from './js/renderMarkup.hbs';
+import renderMarkup from './templates/renderMarkup.hbs';
+import {onFailureAlert, onSucsessAlert, onEndOfGalerey, onSameUserQuery, onEmptyQuery} from './js/alerts.js';
 
 const refs ={
     form: document.querySelector('#search-form'),
@@ -13,7 +13,7 @@ const refs ={
 };
 let page = 1;
 let perPage  = 40;
-let userQuery = '';
+let userQuery = null;
 const options = {
     root: null,
     rootMargin: '500px',
@@ -32,13 +32,19 @@ refs.form.addEventListener('submit', onSearchFormSubmit);
 
 function onSearchFormSubmit(event){
     event.preventDefault();
-    userQuery = event.currentTarget.searchQuery.value.trim();
-
-    if(userQuery === ''){
-        onFailureAlert();
+    if(userQuery === event.currentTarget.searchQuery.value){
+        onSameUserQuery();
         return;
     };
 
+    userQuery = event.currentTarget.searchQuery.value.trim();
+
+    if(userQuery === ''){
+        onEmptyQuery();
+        return;
+    };
+
+    observer.unobserve(event.target);
     refs.container.innerHTML = '';
     page = 1;
   
@@ -58,21 +64,17 @@ function onSearchFormSubmit(event){
     .finally(event.target.reset());
 };
 
-function onFailureAlert(){
-    Notiflix.Notify.failure("Sorry, there are no images matching your search query. Please try again.")
-};
-
-function onSucsessAlert(data){
-    Notiflix.Notify.success(`Hooray! We found ${data.totalHits} images.`)
-};
-
-function onEndOfGalerey(){
-    Notiflix.Notify.info("We're sorry, but you've reached the end of search results.")
-};
 
 function updateQuery(entries){
     entries.forEach(entry=>{    
         if(entry.isIntersecting){
+            const { height: cardHeight } = document.querySelector(".gallery")
+                .firstElementChild.getBoundingClientRect();
+
+                window.scrollBy({
+                top: cardHeight * 3,
+                behavior: "smooth",
+            });
             picturueQuery(userQuery,page+=1,perPage).then(({data})=>{
                 
                 const endOfSearch = Math.ceil(data.totalHits / perPage);
@@ -84,13 +86,7 @@ function updateQuery(entries){
 
                 renderCard(data.hits);
                 
-                const { height: cardHeight } = document.querySelector(".gallery")
-                .firstElementChild.getBoundingClientRect();
-
-                window.scrollBy({
-                top: cardHeight * 3,
-                behavior: "smooth",
-                });
+                
                 lightbox.refresh();
             });
         };
